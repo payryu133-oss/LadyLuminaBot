@@ -3,6 +3,22 @@ from discord.ext import commands
 import google.generativeai as genai
 import os
 
+from flask import Flask
+from threading import Thread
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Lumina is Alive!"
+
+def run():
+    app.run(host='0.0.0.0', port=10000)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+    
 # ดึงรหัสผ่านระบบจาก Render Environment
 TOKEN = os.getenv("DISCORD_TOKEN")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
@@ -37,5 +53,6 @@ async def on_message(message):
 @bot.command()
 async def ping(ctx):
     await ctx.send(f"ความเร็วคลื่น: {round(bot.latency * 1000)}ms เจ้าค่ะ")
+keep_alive()
 
 bot.run(TOKEN)
