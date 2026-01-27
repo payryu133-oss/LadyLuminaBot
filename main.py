@@ -3,32 +3,39 @@ from discord.ext import commands
 import google.generativeai as genai
 import os
 
-# ดึงรหัสจาก Environment Variables (เดี๋ยวไปใส่ในหน้าเว็บ Koyeb)
+# ดึงรหัสผ่านระบบจาก Render Environment
 TOKEN = os.getenv("DISCORD_TOKEN")
 GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
+# ตั้งค่า Gemini AI
 genai.configure(api_key=GEMINI_KEY)
-ai_model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-1.5-flash')
 
+# ตั้งค่าบอท Discord
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f'✅ {bot.user} พร้อมรับใช้แล้วเจ้าค่ะ!')
+    print(f'✅ Lady Lumina ออนไลน์แล้วเจ้าค่ะ (รันบน Cloud)')
 
 @bot.event
 async def on_message(message):
     if message.author == bot.user: return
-    if message.content.startswith('!'):
-        await bot.process_commands(message)
-        return
+    
+    # ตอบโต้ด้วย AI
+    if not message.content.startswith('!'):
+        try:
+            prompt = f"คุณคือ Lady Lumina หญิงสาวผู้สุภาพ ตอบด้วย 'เจ้าค่ะ' เสมอ: {message.content}"
+            response = model.generate_content(prompt)
+            await message.channel.send(response.text)
+        except Exception as e:
+            print(f"Error: {e}")
 
-    prompt = f"คุณคือ Lady Lumina ผู้สูงศักดิ์ ตอบสุภาพ: {message.content}"
-    try:
-        response = ai_model.generate_content(prompt)
-        await message.channel.send(response.text)
-    except:
-        await message.channel.send("กระแสน้ำแปรปรวนนิดหน่อยเจ้าค่ะ...")
+    await bot.process_commands(message)
+
+@bot.command()
+async def ping(ctx):
+    await ctx.send(f"ความเร็วคลื่น: {round(bot.latency * 1000)}ms เจ้าค่ะ")
 
 bot.run(TOKEN)
