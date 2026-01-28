@@ -5,18 +5,19 @@ import google.generativeai as genai
 from flask import Flask
 from threading import Thread
 
-# --- 1. ระบบรักษาชีวิต (Flask) ---
+# --- 1. ระบบ Flask สำหรับ UptimeRobot ---
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Lumina is Awake!"
+    return "Lady Lumina is Alive!"
 
-def run():
+def run_flask():
+    # ห้ามใส่ debug=True เด็ดขาดนะเจ้าคะ
     app.run(host='0.0.0.0', port=10000)
 
 def keep_alive():
-    t = Thread(target=run)
+    t = Thread(target=run_flask)
     t.start()
 
 # --- 2. ตั้งค่าบอท Discord ---
@@ -29,8 +30,7 @@ model = genai.GenerativeModel('gemini-pro')
 
 @bot.event
 async def on_ready():
-    print(f'Logged in as {bot.user.name}')
-    print("--- Lady Lumina is Online Now! ---")
+    print(f'--- บันทึก: {bot.user.name} ออนไลน์แล้วเจ้าค่ะพระมารดา! ---')
 
 @bot.event
 async def on_message(message):
@@ -38,19 +38,21 @@ async def on_message(message):
         return
 
     try:
-        # รับคำถามจาก Discord ส่งให้ Gemini
         response = model.generate_content(message.content)
         await message.channel.send(response.text)
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"เกิดข้อผิดพลาด: {e}")
 
-# --- 4. ส่วนสั่งรันระบบ ---
+# --- 4. ส่วนสำคัญ: ปรับลำดับการปลุกวิญญาณ ---
 if __name__ == "__main__":
-    # ดึงกุญแจจาก Environment Variables ใน Render
     TOKEN = os.getenv("DISCORD_TOKEN")
     
     if TOKEN:
-        keep_alive()   # สั่งรันเว็บเบื้องหลัง
-        bot.run(TOKEN) # สั่งรันบอทเข้า Discord
+        print("กำลังเริ่มระบบรักษาชีวิต...")
+        keep_alive()  # สั่งให้ Flask แยกไปทำงานเบื้องหลัง
+        
+        print("กำลังส่งกระแสจิตปลุก Lady Lumina เข้า Discord...")
+        bot.run(TOKEN) # บรรทัดนี้จะทำให้บอทขึ้นจุดเขียว
     else:
-        print("Error: No DISCORD_TOKEN found!")
+        print("ไม่พบ DISCORD_TOKEN ในหน้า Environment ของ Render เจ้าค่ะ!")
+
